@@ -71,25 +71,36 @@ install_dependencies() {
     info "Gerekli paketler yükleniyor..."
     {
         dnf install -y epel-release
-        dnf install -y openvpn openssl ca-certificates tar wget curl firewalld
+        dnf install -y openvpn openssl ca-certificates tar wget curl iptables-services
+        # firewalld'yi kaldır ve iptables'i etkinleştir
+        systemctl disable --now firewalld
+        systemctl mask firewalld
+        systemctl enable --now iptables
     } &> /dev/null
     success "Paketler başarıyla yüklendi."
 }
 
-# Firewall Yapılandırması
+# Firewall Yapılandırması (iptables)
 configure_firewall() {
     local port=$1
     local protocol=$2
     
-    info "Firewall yapılandırılıyor..."
+    info "IPTables yapılandırılıyor..."
     {
-        systemctl enable --now firewalld.service
-        firewall-cmd --add-port="$port"/"$protocol" --permanent
-        firewall-cmd --zone=trusted --add-source=10.8.0.0/24 --permanent
-        firewall-cmd --direct --add-rule ipv4 nat POSTROUTING 0 -s 10.8.0.0/24 ! -d 10.8.0.0/24 -j SNAT --to "$ip" --permanent
-        firewall-cmd --reload
+        # NAT ayarları
+        iptables -t nat -A POSTROUTING -s 10.8.0.0/24 ! -d 10.8.0.0/24 -j SNAT --to "$ip"
+        
+        # Port ve protokol kuralları
+        iptables -A INPUT -p "$protocol" --dport "$port" -j ACCEPT
+        iptables -A INPUT -i tun+ -j ACCEPT
+        iptables -A FORWARD -i tun+ -j ACCEPT
+        iptables -A FORWARD -i tun+ -o eth0 -m state --state RELATED,ESTABLISHED -j ACCEPT
+        iptables -A FORWARD -i eth0 -o tun+ -m state --state RELATED,ESTABLISHED -j ACCEPT
+        
+        # Kuralları kaydet
+        service iptables save
     } &> /dev/null
-    success "Firewall başarıyla yapılandırıldı."
+    success "IPTables başarıyla yapılandırıldı."
 }
 
 # Client Yapılandırması Oluşturma
@@ -216,21 +227,21 @@ main_installation() {
 
         # OpenVPN Kurulumu
         info "OpenVPN yapılandırılıyor..."
-        mkdir -p /etc/openvpn/server/easy-rsa/
-        wget -qO- 'https://github.com/OpenVPN/easy-rsa/releases/download/v3.1.1/EasyRSA-3.1.1.tgz' | tar xz -C /etc/openvpn/server/easy-rsa/ --strip-components 1
+        mkdir -p /etc/openvpn/easy-rsa/
+        wget -qO- 'https://github.com/OpenVPN/easy-rsa/releases/download/v3.1.1/EasyRSA-3.1.1.tgz' | tar xz -C /etc/openvpn/easy-rsa/ --strip-components 1
 
         # Sertifika Oluşturma
         info "SSL sertifikaları oluşturuluyor..."
-        cd /etc/openvpn/server/easy-rsa/
+        cd /etc/openvpn/easy-rsa/
         ./easyrsa --batch init-pki
         ./easyrsa --batch build-ca nopass
         ./easyrsa --batch --days=3650 build-server-full server nopass
         ./easyrsa --batch --days=3650 gen-crl
 
         # Sertifikaları Taşıma
-        cp pki/ca.crt pki/private/ca.key pki/issued/server.crt pki/private/server.key pki/crl.pem /etc/openvpn/server
-        chown nobody:nobody /etc/openvpn/server/crl.pem
-        chmod o+x /etc/openvpn/server/
+        cp pki/ca.crt pki/private/ca.key pki/issued/server.crt pki/private/server.key pki/crl.pem /etc/openvpn/
+        chown nobody:nobody /etc/openvpn/crl.pem
+        chmod o+x /etc/openvpn/
 
         # Server Yapılandırması
         info "Server yapılandırması oluşturuluyor..."
@@ -292,7 +303,7 @@ main_installation() {
             echo "auth SHA256"
             echo "tls-version-min 1.2"
             echo "tls-cipher TLS-ECDHE-ECDSA-WITH-AES-256-GCM-SHA384"
-        } > /etc/openvpn/server/server.conf
+        } > /etc/openvpn/server.conf
 
         # IP Forwarding
         echo 'net.ipv4.ip_forward=1' > /etc/sysctl.d/99-openvpn-forward.conf
@@ -316,11 +327,14 @@ main_installation() {
             echo "cipher AES-256-GCM"
             echo "auth SHA256"
             echo "verb 3"
-        } > /etc/openvpn/server/client-common.txt
+        } > /etc/openvpn/client-common.txt
 
         # OpenVPN Servisi
         info "OpenVPN servisi başlatılıyor..."
-        systemctl enable --now openvpn-server@server.service
+        systemctl enable openvpn@server
+        systemctl start openvpn@server
+        sleep 2
+        systemctl status openvpn@server
 
         # İlk Client
         generate_client_config "$client" "$ip" "$port" "$protocol"
@@ -410,21 +424,25 @@ main_installation() {
                     read -p "OpenVPN kaldırılsın mı? [e/H]: " remove
                 done
                 if [[ "$remove" =~ ^[eE]$ ]]; then
-                    port=$(grep '^port ' /etc/openvpn/server/server.conf | cut -d " " -f 2)
-                    protocol=$(grep '^proto ' /etc/openvpn/server/server.conf | cut -d " " -f 2)
+                    port=$(grep '^port ' /etc/openvpn/server.conf | cut -d " " -f 2)
+                    protocol=$(grep '^proto ' /etc/openvpn/server.conf | cut -d " " -f 2)
                     
-                    info "Firewall kuralları kaldırılıyor..."
+                    info "IPTables kuralları kaldırılıyor..."
                     {
-                        firewall-cmd --remove-port="$port"/"$protocol" --permanent
-                        firewall-cmd --zone=trusted --remove-source=10.8.0.0/24 --permanent
-                        firewall-cmd --reload
+                        iptables -t nat -D POSTROUTING -s 10.8.0.0/24 ! -d 10.8.0.0/24 -j SNAT --to "$ip"
+                        iptables -D INPUT -p "$protocol" --dport "$port" -j ACCEPT
+                        iptables -D INPUT -i tun+ -j ACCEPT
+                        iptables -D FORWARD -i tun+ -j ACCEPT
+                        iptables -D FORWARD -i tun+ -o eth0 -m state --state RELATED,ESTABLISHED -j ACCEPT
+                        iptables -D FORWARD -i eth0 -o tun+ -m state --state RELATED,ESTABLISHED -j ACCEPT
+                        service iptables save
                     } &> /dev/null
                     
                     info "OpenVPN servisi durduruluyor..."
-                    systemctl disable --now openvpn-server@server.service
+                    systemctl disable --now openvpn@server
                     
                     info "OpenVPN dosyaları siliniyor..."
-                    rm -rf /etc/openvpn/server
+                    rm -rf /etc/openvpn/*
                     rm -f /etc/sysctl.d/99-openvpn-forward.conf
                     
                     info "OpenVPN paketi kaldırılıyor..."
