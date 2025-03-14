@@ -4,7 +4,7 @@
 [![Platform](https://img.shields.io/badge/platform-AlmaLinux%208.10-red.svg)](https://almalinux.org/)
 [![Plesk](https://img.shields.io/badge/Plesk-Supported-green.svg)](https://www.plesk.com/)
 
-AlmaLinux 8.10 ve Plesk Panel için optimize edilmiş, kullanıcı dostu OpenVPN kurulum ve yönetim betiği.
+AlmaLinux 8+ ve Plesk Panel için optimize edilmiş, kullanıcı dostu OpenVPN kurulum ve yönetim betiği.
 
 ## 🌟 Özellikler
 
@@ -24,7 +24,7 @@ AlmaLinux 8.10 ve Plesk Panel için optimize edilmiş, kullanıcı dostu OpenVPN
 
 ## 📋 Gereksinimler
 
-- AlmaLinux 8.10
+- AlmaLinux 8+
 - Plesk Panel
 - Root yetkisi
 
