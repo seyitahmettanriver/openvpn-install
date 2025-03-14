@@ -1,7 +1,7 @@
 # 🔒 OpenVPN Kurulum ve Yönetim Aracı
 
 [![Version](https://img.shields.io/badge/version-1.0-blue.svg)](https://github.com/seyitahmettanriver/openvpn-install)
-[![Platform](https://img.shields.io/badge/platform-AlmaLinux%208.10-red.svg)](https://almalinux.org/)
+[![Platform](https://img.shields.io/badge/platform-AlmaLinux%208+-red.svg)](https://almalinux.org/)
 [![Plesk](https://img.shields.io/badge/Plesk-Supported-green.svg)](https://www.plesk.com/)
 
 AlmaLinux 8+ ve Plesk Panel için optimize edilmiş, kullanıcı dostu OpenVPN kurulum ve yönetim betiği.
