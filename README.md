@@ -1,34 +1,38 @@
-# 🔒 AlmaLinux OpenVPN Kurulum Betiği
+# 🔒 OpenVPN Kurulum ve Yönetim Aracı
 
-Bu betik, AlmaLinux 8.x sistemlerde OpenVPN sunucusunu otomatik olarak kuran ve yöneten, kullanıcı dostu bir araçtır. Özellikle Plesk Panel ile entegre çalışmak üzere tasarlanmıştır.
+[![Version](https://img.shields.io/badge/version-1.0-blue.svg)](https://github.com/seyitahmettanriver/openvpn-install)
+[![Platform](https://img.shields.io/badge/platform-AlmaLinux%208.10-red.svg)](https://almalinux.org/)
+[![Plesk](https://img.shields.io/badge/Plesk-Supported-green.svg)](https://www.plesk.com/)
 
-![Version](https://img.shields.io/badge/version-1.0-blue)
-![Platform](https://img.shields.io/badge/platform-AlmaLinux%208.x-red)
-![License](https://img.shields.io/badge/license-MIT-green)
+AlmaLinux 8.10 ve Plesk Panel için optimize edilmiş, kullanıcı dostu OpenVPN kurulum ve yönetim betiği.
 
 ## 🌟 Özellikler
 
-- ✨ Görsel ve kullanıcı dostu arayüz
-- 🔐 Güçlü güvenlik yapılandırması
-- 🚀 Otomatik kurulum ve yapılandırma
-- 📝 Detaylı kurulum günlüğü
-- 🛡️ Firewall otomatik yapılandırması
-- 👥 Kolay client yönetimi
-- 🎨 Renkli ve anlaşılır çıktılar
-- 🔄 Plesk Panel uyumluluğu
+- 📱 Kullanıcı dostu, renkli ve interaktif arayüz
+- 🔐 Güçlü şifreleme seçenekleri (AES-256-GCM, AES-128-GCM, CHACHA20-POLY1305)
+- 🌐 Çoklu DNS seçenekleri:
+  - Google DNS
+  - Cloudflare DNS
+  - OpenDNS
+  - Quad9
+  - AdGuard DNS
+  - Sistem DNS
+- 🛡️ Plesk Panel ile uyumlu iptables yapılandırması
+- 📊 Kolay client yönetimi
+- 🔄 Otomatik sertifika yönetimi
+- ⚡ Optimize edilmiş performans ayarları
 
 ## 📋 Gereksinimler
 
-- AlmaLinux 8.x
-- Root yetkileri
-- Plesk Panel (opsiyonel)
-- İnternet bağlantısı
+- AlmaLinux 8.10
+- Plesk Panel
+- Root yetkisi
 
 ## 🚀 Kurulum
 
 1. Betiği indirin:
 ```bash
-wget https://raw.githubusercontent.com/seyitahmettanriver/openvpn-install/refs/heads/main/openvpn-install.sh
+wget https://raw.githubusercontent.com/seyitahmettanriver/openvpn-install/main/openvpn-install.sh
 ```
 
 2. Çalıştırma izni verin:
@@ -41,90 +45,65 @@ chmod +x openvpn-install.sh
 ./openvpn-install.sh
 ```
 
-## 💡 Kullanım
-
-Betik interaktif bir menü sunar ve aşağıdaki işlemleri yapmanıza olanak tanır:
-
-- 🆕 Yeni OpenVPN sunucusu kurulumu
-- 👤 Yeni client ekleme
-- ❌ Client sertifikası iptal etme
-- 🗑️ OpenVPN'i kaldırma
+## 💻 Kullanım
 
 ### İlk Kurulum
+- Betiği çalıştırdığınızda size aşağıdaki seçenekler sunulacaktır:
+  1. IP adresi seçimi
+  2. Protokol seçimi (UDP/TCP)
+  3. Port seçimi
+  4. DNS sunucu seçimi
+  5. Şifreleme algoritması seçimi
+  6. Maksimum client sayısı
+  7. İlk client ismi
 
-İlk kurulum sırasında aşağıdaki seçenekleri yapılandırabilirsiniz:
+### Mevcut Kurulum Yönetimi
+- Betik tekrar çalıştırıldığında şu seçenekler sunulur:
+  1. Yeni client ekle
+  2. Client sertifikası iptal et
+  3. OpenVPN'i kaldır
+  4. Çıkış
 
-- 🌐 IP adresi seçimi
-- 🔌 Protokol seçimi (UDP/TCP)
-- 🚪 Port numarası
-- 🔍 DNS sunucusu
-- 📝 İlk client ismi
+## 🔧 Güvenlik Özellikleri
 
-## ⚙️ Yapılandırma
-
-Betik otomatik olarak aşağıdaki yapılandırmaları gerçekleştirir:
-
-- Güvenli sertifika oluşturma
-- Firewall kuralları
-- IP forwarding
-- DNS yapılandırması
-- Client yapılandırması
-
-## 🛡️ Güvenlik
-
-Bu betik şu güvenlik özelliklerini içerir:
-
-- AES-256-GCM şifreleme
-- SHA256 kimlik doğrulama
 - TLS 1.2 minimum versiyon
-- Güçlü TLS şifreleme paketi
-- Otomatik sertifika yönetimi
+- Güçlü şifreleme algoritmaları
+- Client sertifika doğrulama
+- IP forwarding güvenliği
+- Plesk uyumlu firewall kuralları
 
-## 📝 Client Yapılandırması
+## 📝 Log Dosyaları
 
-Client yapılandırma dosyaları (.ovpn) otomatik olarak oluşturulur ve aşağıdaki özellikleri içerir:
+- Server log: `/var/log/openvpn/openvpn.log`
+- Status log: `/var/log/openvpn/openvpn-status.log`
 
-- Özel sertifikalar
-- Optimize edilmiş ağ ayarları
-- Güvenli şifreleme parametreleri
-- DNS yapılandırması
+## ⚠️ Sorun Giderme
 
-## 🔧 Sorun Giderme
-
-Sık karşılaşılan sorunlar ve çözümleri:
-
-1. Port erişim sorunu:
+1. Servis durumunu kontrol edin:
 ```bash
-sudo firewall-cmd --zone=public --add-port=<port>/udp --permanent
-sudo firewall-cmd --reload
+systemctl status openvpn-server@server
 ```
 
-2. OpenVPN servisi başlatma sorunu:
+2. Log dosyasını kontrol edin:
 ```bash
-sudo systemctl status openvpn-server@server.service
+tail -f /var/log/openvpn/openvpn.log
 ```
 
-3. Sertifika hataları:
-```bash
-sudo ./openvpn-install.sh  # Seçenek 2'yi kullanarak sertifikayı yeniden oluşturun
-```
+## 📞 İletişim
 
-## 📚 Lisans
+- GitHub: [seyitahmettanriver](https://github.com/seyitahmettanriver)
+
+## 📜 Lisans
 
 Bu proje MIT lisansı altında lisanslanmıştır. Detaylar için [LICENSE](LICENSE) dosyasına bakın.
 
-## 🤝 Katkıda Bulunma
+## 👥 Katkıda Bulunma
 
-1. Bu projeyi fork edin
-2. Feature branch'inizi oluşturun (`git checkout -b feature/AmazingFeature`)
-3. Değişikliklerinizi commit edin (`git commit -m 'Add some AmazingFeature'`)
-4. Branch'inizi push edin (`git push origin feature/AmazingFeature`)
+1. Bu depoyu fork edin
+2. Yeni bir özellik dalı oluşturun (`git checkout -b yeni-ozellik`)
+3. Değişikliklerinizi commit edin (`git commit -am 'Yeni özellik eklendi'`)
+4. Dalınıza push yapın (`git push origin yeni-ozellik`)
 5. Bir Pull Request oluşturun
 
-## 📮 İletişim
-
-GitHub Issues üzerinden soru sorabilir ve önerilerde bulunabilirsiniz.
-
-## ⭐ Projeyi Destekleyin
-
-Eğer bu proje işinize yaradıysa, ⭐ vermeyi unutmayın! 
+---
+⭐️ Bu projeyi beğendiyseniz yıldız vermeyi unutmayın! 
