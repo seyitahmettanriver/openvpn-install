@@ -295,20 +295,24 @@ configure_firewall() {
         firewall-cmd --permanent --add-port=${port}/${protocol} &>/dev/null
         firewall-cmd --permanent --add-masquerade &>/dev/null
         firewall-cmd --permanent --zone=trusted --add-interface=tun0 &>/dev/null
+        # Bazen firewalld zone kuralları yönlendirmeyi kesebilir, bu yüzden zengin/doğrudan kurallar ekliyoruz:
+        firewall-cmd --permanent --direct --add-rule ipv4 nat POSTROUTING 0 -s 10.8.0.0/24 -o $nic -j MASQUERADE &>/dev/null
+        firewall-cmd --permanent --direct --add-rule ipv4 filter FORWARD 0 -i tun+ -j ACCEPT &>/dev/null
         firewall-cmd --reload &>/dev/null
         success "$MSG_OK_FWD"
     else
         info "$MSG_INFO_IPT_ACTIVE"
         iptables-save > /root/iptables-backup-$(date +%Y%m%d-%H%M%S)
         
+        # -I kullanarak kuralları EN ÜSTE ekliyoruz (Plesk'in DROP kurallarını aşmak için)
         iptables -t nat -C POSTROUTING -s 10.8.0.0/24 -o $nic -j MASQUERADE &>/dev/null || \
-        iptables -t nat -A POSTROUTING -s 10.8.0.0/24 -o $nic -j MASQUERADE
+        iptables -t nat -I POSTROUTING 1 -s 10.8.0.0/24 -o $nic -j MASQUERADE
         
-        iptables -C INPUT -i tun+ -j ACCEPT &>/dev/null || iptables -A INPUT -i tun+ -j ACCEPT
-        iptables -C FORWARD -i tun+ -j ACCEPT &>/dev/null || iptables -A FORWARD -i tun+ -j ACCEPT
-        iptables -C INPUT -i $nic -p $protocol --dport $port -j ACCEPT &>/dev/null || iptables -A INPUT -i $nic -p $protocol --dport $port -j ACCEPT
-        iptables -C FORWARD -i tun+ -o $nic -j ACCEPT &>/dev/null || iptables -A FORWARD -i tun+ -o $nic -j ACCEPT
-        iptables -C FORWARD -i $nic -o tun+ -j ACCEPT &>/dev/null || iptables -A FORWARD -i $nic -o tun+ -j ACCEPT
+        iptables -C INPUT -i tun+ -j ACCEPT &>/dev/null || iptables -I INPUT 1 -i tun+ -j ACCEPT
+        iptables -C FORWARD -i tun+ -j ACCEPT &>/dev/null || iptables -I FORWARD 1 -i tun+ -j ACCEPT
+        iptables -C INPUT -i $nic -p $protocol --dport $port -j ACCEPT &>/dev/null || iptables -I INPUT 1 -i $nic -p $protocol --dport $port -j ACCEPT
+        iptables -C FORWARD -i tun+ -o $nic -j ACCEPT &>/dev/null || iptables -I FORWARD 1 -i tun+ -o $nic -j ACCEPT
+        iptables -C FORWARD -i $nic -o tun+ -j ACCEPT &>/dev/null || iptables -I FORWARD 1 -i $nic -o tun+ -j ACCEPT
         
         if systemctl is-active --quiet iptables; then
             service iptables save &>/dev/null
@@ -330,6 +334,8 @@ cleanup_firewall() {
         firewall-cmd --permanent --remove-port=${port}/${protocol} &>/dev/null
         firewall-cmd --permanent --remove-masquerade &>/dev/null
         firewall-cmd --permanent --zone=trusted --remove-interface=tun0 &>/dev/null
+        firewall-cmd --permanent --direct --remove-rule ipv4 nat POSTROUTING 0 -s 10.8.0.0/24 -o $nic -j MASQUERADE &>/dev/null
+        firewall-cmd --permanent --direct --remove-rule ipv4 filter FORWARD 0 -i tun+ -j ACCEPT &>/dev/null
         firewall-cmd --reload &>/dev/null
         success "$MSG_OK_FWD_CLEAN"
     else
