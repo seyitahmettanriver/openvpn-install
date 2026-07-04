@@ -8,12 +8,12 @@
 </div>
 
 <br/>
+<img width="1377" height="569" alt="image" src="https://github.com/user-attachments/assets/ce92fb60-4a2d-41ee-ae97-334e3b131a6d" />
 
 Standart OpenVPN kurulum betiklerinin **Plesk Panel** sunucularında yarattığı güvenlik duvarı (firewall) çakışmalarını ve internet erişim kopmalarını önlemek amacıyla baştan aşağı yeniden yazılmış, son derece güvenli ve profesyonel bir OpenVPN kurulum aracıdır.
 
 Canlı web sitelerinizin barındığı (production) sunucularda kendi kişisel VPN'inizi barındırmak istiyor ancak "sitelerime zarar gelir mi?" endişesi taşıyorsanız, bu betik tam size göre.
 
-<img width="1377" height="569" alt="image" src="https://github.com/user-attachments/assets/a6399430-c4fe-44c2-bdb1-0cb5072cbc01" />
 
 
 
