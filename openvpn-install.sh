@@ -498,6 +498,7 @@ main_installation() {
                 echo "push \"dhcp-option DNS $dns1\""
                 echo "push \"dhcp-option DNS $dns2\""
             fi
+            echo 'push "block-outside-dns"'
 
             echo "cipher $cipher"
             echo "auth SHA256"
