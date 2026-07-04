@@ -13,7 +13,8 @@ Standart OpenVPN kurulum betiklerinin **Plesk Panel** sunucularında yarattığ�
 
 Canlı web sitelerinizin barındığı (production) sunucularda kendi kişisel VPN'inizi barındırmak istiyor ancak "sitelerime zarar gelir mi?" endişesi taşıyorsanız, bu betik tam size göre.
 
-![Uploading image.png…]()
+<img width="1377" height="569" alt="image" src="https://github.com/user-attachments/assets/a6399430-c4fe-44c2-bdb1-0cb5072cbc01" />
+
 
 
 ## ✨ Öne Çıkan Özellikler
